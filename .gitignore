@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+
+# NHANES files are public but large; 00_download_and_merge.py fetches them
+data/raw/
+data/processed/
+
+# everything here is rebuilt by re-running the scripts
+outputs/
+
+.ipynb_checkpoints/
+.DS_Store
