@@ -32,7 +32,7 @@ point the same way, that is the strongest version of the finding.
 
 ## Run order
 
-    python scripts/00_download_and_merge.py --spirometry data/raw/NHANES_spirometry.csv
+    python scripts/00_download_and_merge.py --spirometry data/raw/NHANES_2007_2012_Only_Acceptable_Spirometry_Values.csv
     python scripts/01_audit.py
     python scripts/02_equations.py
     python scripts/03_reclassification.py

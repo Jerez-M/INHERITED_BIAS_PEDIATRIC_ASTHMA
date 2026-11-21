@@ -104,6 +104,22 @@ def main():
     ap.add_argument("--skip-download", action="store_true")
     args = ap.parse_args()
 
+    # ---------- 0. check the spirometry file before downloading 31 MB ----------
+    spiro_path = args.spirometry
+    if not spiro_path.exists():
+        found = sorted(args.raw_dir.glob("*.csv"))
+        msg = [f"\nno spirometry file at {spiro_path}"]
+        if found:
+            msg.append(f"\nCSV files actually in {args.raw_dir}:")
+            msg += [f"    {f.name}" for f in found]
+            msg.append(f"\nRun it again with one of those, for example:\n"
+                       f"    python scripts/00_download_and_merge.py "
+                       f'--spirometry "{found[0].as_posix()}"')
+        else:
+            msg.append(f"\n{args.raw_dir} has no CSV files in it at all. "
+                       f"Put the spirometry CSV there first.")
+        sys.exit("\n".join(msg))
+
     # ---------- 1. download ----------
     paths = {}
     print("NHANES files")
@@ -132,7 +148,7 @@ def main():
             sys.exit(f"{name} has duplicate SEQN - cycles may overlap")
 
     # ---------- 3. spirometry ----------
-    spiro = pd.read_csv(args.spirometry, low_memory=False)
+    spiro = pd.read_csv(spiro_path, low_memory=False)
     spiro["SEQN"] = spiro["SEQN"].astype("int64")
     print(f"spiro rows {len(spiro):,}  unique SEQN {spiro.SEQN.nunique():,}")
 
