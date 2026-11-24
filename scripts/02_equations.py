@@ -3,7 +3,9 @@
 This is where the experiment is actually set up. After this, the five runs
 differ only in which three columns they read.
 """
+
 import sys, pathlib
+
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 import pandas as pd
@@ -23,7 +25,7 @@ def main():
     for name, cols in C.EQUATION_TYPES.items():
         if name == "raw":
             continue
-        rows[name] = out.groupby("race")[cols[0]].mean()   # the FEV1 column
+        rows[name] = out.groupby("race")[cols[0]].mean()  # the FEV1 column
     means = pd.DataFrame(rows)
     print(means.round(3).to_string())
     print("\n(the FEV1 column of each equation. A race-specific equation pulls")
