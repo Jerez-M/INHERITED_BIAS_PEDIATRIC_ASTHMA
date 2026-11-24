@@ -5,6 +5,7 @@ same number of children. If one of them then misses more Black children with
 asthma than another, that is not because it flagged fewer children overall.
 It is because it flagged different ones.
 """
+
 import numpy as np
 import pandas as pd
 from sklearn.base import clone
@@ -15,8 +16,9 @@ import config as C
 
 
 # ---------------------------------------------------------------------------
-def oof_probabilities(model, X, y, seed=C.SEED,
-                      n_splits=C.N_SPLITS, n_repeats=C.N_REPEATS):
+def oof_probabilities(
+    model, X, y, seed=C.SEED, n_splits=C.N_SPLITS, n_repeats=C.N_REPEATS
+):
     """Out-of-fold probability for every child, averaged over the repeats.
 
     Every child is predicted by a model that never saw them. Repeating the
@@ -24,8 +26,9 @@ def oof_probabilities(model, X, y, seed=C.SEED,
     """
     X = np.asarray(X, dtype=float)
     y = np.asarray(y, dtype=int)
-    cv = RepeatedStratifiedKFold(n_splits=n_splits, n_repeats=n_repeats,
-                                 random_state=seed)
+    cv = RepeatedStratifiedKFold(
+        n_splits=n_splits, n_repeats=n_repeats, random_state=seed
+    )
 
     per_repeat = np.full((len(y), n_repeats), np.nan)
     for i, (train, test) in enumerate(cv.split(X, y)):
@@ -62,15 +65,17 @@ def group_table(y, p, groups, thr) -> pd.DataFrame:
     for g in ["ALL"] + sorted(pd.unique(groups)):
         m = np.ones(len(y), bool) if g == "ALL" else (groups == g)
         fnr, fpr = _rates(y[m], flagged[m])
-        rows.append({
-            "group": g,
-            "n": int(m.sum()),
-            "asthma": int(y[m].sum()),
-            "flag_rate": float(flagged[m].mean()),
-            "missed": int((y[m] == 1).sum() - (flagged[m] & (y[m] == 1)).sum()),
-            "fnr": fnr,
-            "fpr": fpr,
-        })
+        rows.append(
+            {
+                "group": g,
+                "n": int(m.sum()),
+                "asthma": int(y[m].sum()),
+                "flag_rate": float(flagged[m].mean()),
+                "missed": int((y[m] == 1).sum() - (flagged[m] & (y[m] == 1)).sum()),
+                "fnr": fnr,
+                "fpr": fpr,
+            }
+        )
     return pd.DataFrame(rows)
 
 
@@ -88,8 +93,9 @@ def fnr_gap(y, p, groups, thr, pair=None) -> float:
 
 
 # ---------------------------------------------------------------------------
-def bootstrap_gap(y, p, groups, rate=C.FLAG_RATE,
-                  n=C.N_BOOTSTRAP, seed=C.SEED, pair=None):
+def bootstrap_gap(
+    y, p, groups, rate=C.FLAG_RATE, n=C.N_BOOTSTRAP, seed=C.SEED, pair=None
+):
     """Confidence interval for the gap, resampling children.
 
     The threshold is recomputed inside every resample, so the matched flag
@@ -114,8 +120,9 @@ def bootstrap_gap(y, p, groups, rate=C.FLAG_RATE,
 
 
 # ---------------------------------------------------------------------------
-def evaluate(model, X, y, groups, equation_type, model_name,
-             seed=C.SEED, n_repeats=C.N_REPEATS):
+def evaluate(
+    model, X, y, groups, equation_type, model_name, seed=C.SEED, n_repeats=C.N_REPEATS
+):
     """Everything about one (equation type, model) pair."""
     p, _ = oof_probabilities(model, X, y, seed=seed, n_repeats=n_repeats)
     thr = threshold_for_rate(p)
