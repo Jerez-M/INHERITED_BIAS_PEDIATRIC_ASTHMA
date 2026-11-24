@@ -23,6 +23,15 @@ it flagged different ones.
 | `ownfit_race`   | our own equation, Hankinson's functional form, fitted per race        | own pair → **internal validity**         |
 | `ownfit_norace` | the same equation, race left out                                      | own pair → **internal validity**         |
 
+## Hank Equations
+Predicted = a0 + a1·Age + a2·Age² + b_pred·Height²
+LLN       = a0 + a1·Age + a2·Age² + b_lln ·Height²
+
+## Ownfit Equations
+Predicted = b0 + b1·Age + b2·Age² + b3·Height²
+z = (observed − Predicted) / SD
+LLN = exp( ln(1 − 1.645·L·S)/L + ln(M) )
+
 The published pair is what hospitals actually use, so it is the result that
 matters for policy. But it compares two equations built by two different
 research teams on two different populations, so a difference could come from

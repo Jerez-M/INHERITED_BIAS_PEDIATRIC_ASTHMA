@@ -1,7 +1,7 @@
 """Turn litres of breath into z-scores, four different ways.
 
 legacy         Hankinson 1999, the published race-specific equation (pyspiro)
-neutral        GLI Global 2022, already in the source file as *_GLOBAL columns
+neutral        GLI Global 2022, already in the source file as *_GLOBAL columns (Bowerman Research)
 ownfit_race    our own equation, same form as Hankinson, fitted per race
 ownfit_norace  our own equation, same form, race left out
 
@@ -9,6 +9,7 @@ The last two exist so the comparison does not depend on two outside research
 teams having made the same modelling choices. Same specification, same data,
 one difference: race.
 """
+
 import numpy as np
 import pandas as pd
 import pyspiro
@@ -21,8 +22,8 @@ _P = pyspiro.HANKINSON_1999.Parameters
 
 # the three measurements, and what each one is called in the source file
 MEASURES = {
-    "FEV1":  ("Baseline_FEV1_L", _P.FEV1),
-    "FVC":   ("Baseline_FVC_L", _P.FVC),
+    "FEV1": ("Baseline_FEV1_L", _P.FEV1),
+    "FVC": ("Baseline_FVC_L", _P.FVC),
     "Ratio": ("Baseline_FEV1_FVC_Ratio", _P.FEV1FVC),
 }
 
@@ -32,9 +33,7 @@ def _ratio_as_percent(s: pd.Series) -> pd.Series:
     return s * 100 if s.median() < 2 else s
 
 
-# ---------------------------------------------------------------------------
 # 1. the published race-specific equation
-# ---------------------------------------------------------------------------
 def add_hankinson(df: pd.DataFrame) -> pd.DataFrame:
     """Add FEV1_z_hank, FVC_z_hank, Ratio_z_hank (race-specific, published)."""
     out = df.copy()
@@ -42,25 +41,37 @@ def add_hankinson(df: pd.DataFrame) -> pd.DataFrame:
 
     for name, (col, param) in MEASURES.items():
         value = _ratio_as_percent(out[col]) if name == "Ratio" else out[col]
-        work = pd.DataFrame({
-            "sex": out["Sex"], "age": out["Age"],
-            "height": out["Height"], "eth": out["_eth"], "val": value,
-        })
-        res = _HANK.compute(work, parameter=param, sex_col="sex", age_col="age",
-                            height_col="height", value_col="val",
-                            ethnicity_col="eth", metrics=("zscore",))
+        work = pd.DataFrame(
+            {
+                "sex": out["Sex"],
+                "age": out["Age"],
+                "height": out["Height"],
+                "eth": out["_eth"],
+                "val": value,
+            }
+        )
+        res = _HANK.compute(
+            work,
+            parameter=param,
+            sex_col="sex",
+            age_col="age",
+            height_col="height",
+            value_col="val",
+            ethnicity_col="eth",
+            metrics=("zscore",),
+        )
         out[f"{name}_z_hank"] = pd.to_numeric(res["zscore"], errors="coerce").values
 
     lost = out["FEV1_z_hank"].isna().sum()
     if lost:
-        print(f"[equations] Hankinson returned nothing for {lost} children "
-              f"(outside its published age or height range)")
+        print(
+            f"[equations] Hankinson returned nothing for {lost} children "
+            f"(outside its published age or height range)"
+        )
     return out.drop(columns="_eth")
 
 
-# ---------------------------------------------------------------------------
 # 2. our own equation, fitted here
-# ---------------------------------------------------------------------------
 def _design(df: pd.DataFrame, name: str) -> np.ndarray:
     """Hankinson's own functional form.
 
@@ -71,7 +82,7 @@ def _design(df: pd.DataFrame, name: str) -> np.ndarray:
     if name == "Ratio":
         return np.column_stack([np.ones_like(age), age])
     ht2 = df["Height"].to_numpy(float) ** 2
-    return np.column_stack([np.ones_like(age), age, age ** 2, ht2])
+    return np.column_stack([np.ones_like(age), age, age**2, ht2])
 
 
 class OwnEquation:
@@ -83,8 +94,8 @@ class OwnEquation:
 
     def __init__(self, race_aware: bool):
         self.race_aware = race_aware
-        self.coef_ = {}       # (measure, sex, race) -> beta
-        self.sd_ = {}         # (measure, sex, race) -> residual sd
+        self.coef_ = {}  # (measure, sex, race) -> beta
+        self.sd_ = {}  # (measure, sex, race) -> residual sd
 
     def _keys(self, df: pd.DataFrame) -> pd.Series:
         race = df["race"] if self.race_aware else pd.Series("all", index=df.index)
@@ -138,7 +149,6 @@ def add_own_equations(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-# ---------------------------------------------------------------------------
 def build_analysis_table(df: pd.DataFrame) -> pd.DataFrame:
     """Every equation's z-scores on one table, then drop children any of them
     could not score, so all five runs see exactly the same children."""
