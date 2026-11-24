@@ -1,13 +1,31 @@
 .venv/
 __pycache__/
 *.pyc
-
-# NHANES files are public but large; 00_download_and_merge.py fetches them
-data/raw/
-data/processed/
-
-# everything here is rebuilt by re-running the scripts
-outputs/
-
 .ipynb_checkpoints/
 .DS_Store
+
+# Ignore everything inside data subfolders
+data/raw/*
+data/processed/*
+
+# Keep the folders themselves
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Ignore everything inside outputs
+outputs/*
+
+# Keep desired output subfolders
+!outputs/figures/
+!outputs/models/
+!outputs/tables/
+
+# Ignore contents of output subfolders
+outputs/figures/*
+outputs/models/*
+outputs/tables/*
+
+# Keep placeholder files
+!outputs/figures/.gitkeep
+!outputs/models/.gitkeep
+!outputs/tables/.gitkeep
